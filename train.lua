@@ -76,6 +76,7 @@ function Trainer:train()
 
   local output_noisy = model:forward(x_unlabeled)
   dn_loss = criterion:forward(output_noisy, targets)
+  self.dn_loss_sum = self.dn_loss_sum + dn_loss
   local d = criterion:backward(output_noisy, targets)
   model:backward(x_unlabeled, d)
 
@@ -90,6 +91,7 @@ function Trainer:train()
   targets[1]:copy(y)
 
   loss = criterion:forward(out, targets)
+  self.loss_sum = self.loss_sum + loss
   local d = criterion:backward(out, targets)
   model:backward(x_labeled, d)
   confusion:batchAdd(out[1], y)
@@ -97,11 +99,9 @@ function Trainer:train()
   optim.adam(feval, self.params, self.optim_state)
 
   if i % 100 == 0 then
-    self.loss_sum = self.loss_sum + loss
     local loss_mean = self.loss_sum / 100
     self.loss_sum = 0
 
-    self.dn_loss_sum = self.dn_loss_sum + dn_loss
     dn_loss_mean = self.dn_loss_sum / 100
     self.dn_loss_sum = 0
 
